@@ -58,6 +58,7 @@ pub fn run_service_manager() {
         }
     }
 
+    #[cfg(not(target_os = "redox"))]
     crate::platform::become_subreaper(true);
 
     let run_info = prepare_runtimeinfo(&conf, cli_args.dry_run);

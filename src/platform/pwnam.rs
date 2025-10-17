@@ -49,7 +49,7 @@ fn getpwnam(username: &str) -> Result<PwEntry, String> {
     make_user_from_libc(username, &res)
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "redox"))]
 fn make_new_pw() -> libc::passwd {
     libc::passwd {
         pw_name: std::ptr::null_mut(),
@@ -79,7 +79,7 @@ fn make_new_pw() -> libc::passwd {
     }
 }
 
-#[cfg(any(target_os = "freebsd", target_os = "linux"))]
+#[cfg(any(target_os = "freebsd", target_os = "linux", target_os = "redox"))]
 pub fn getpwnam_r(username: &str) -> Result<PwEntry, String> {
     let username_i8 = username.bytes().map(|x| x as i8).collect::<Vec<_>>();
     let pointer: *const i8 = username_i8.as_ptr();
@@ -114,7 +114,7 @@ pub fn getpwnam_r(username: &str) -> Result<PwEntry, String> {
     }
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
+#[cfg(not(any(target_os = "linux", target_os = "freebsd", target_os = "redox")))]
 pub fn getpwnam_r(_username: &str) -> Result<PwEntry, String> {
     compile_error!("getpwnam_r is not yet implemented for this platform");
 }
