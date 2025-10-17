@@ -4,7 +4,7 @@ pub struct GroupEntry {
     pub gid: nix::unistd::Gid,
 }
 
-#[cfg(any(target_os = "linux", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "redox"))]
 fn make_group_from_libc(groupname: &str, group: &libc::group) -> Result<GroupEntry, String> {
     let gid = nix::unistd::Gid::from_raw(group.gr_gid);
     let pw = if !group.gr_passwd.is_null() {

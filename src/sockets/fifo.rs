@@ -22,7 +22,7 @@ impl FifoConfig {
         let fifo_fd = nix::fcntl::open(&self.path, open_flags, mode)
             .map_err(|e| format!("Error opening fifo file {:?}: {}", self.path, e))?;
         // need to make a file out of that so AsRawFd is implemented (it's not implmeneted for RawFd itself...)
-        let fifo = unsafe { std::fs::File::from(fifo_fd) };
+        let fifo = std::fs::File::from(fifo_fd);
         Ok(Box::new(fifo))
     }
 

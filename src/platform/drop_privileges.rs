@@ -17,6 +17,7 @@ pub fn drop_privileges(gid: Gid, supp_gids: &Vec<Gid>, uid: Uid) -> Result<(), S
 
 const ALLOW_READ: [u8; 5] = [b'a', b'l', b'l', b'o', b'w'];
 
+#[cfg(not(target_os = "redox"))]
 fn maybe_set_groups(supp_gids: &Vec<Gid>) -> Result<(), String> {
     if can_drop_groups()? {
         nix::unistd::setgroups(supp_gids)
@@ -28,6 +29,11 @@ fn maybe_set_groups(supp_gids: &Vec<Gid>) -> Result<(), String> {
         // https://github.com/systemd/systemd/blob/master/src/basic/user-util.c
         Ok(())
     }
+}
+
+#[cfg(target_os = "redox")]
+fn maybe_set_groups(supp_gids: &Vec<Gid>) -> Result<(), String> {
+    Ok(())
 }
 
 fn can_drop_groups() -> Result<bool, String> {

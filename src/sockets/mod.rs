@@ -9,7 +9,7 @@ pub use network_sockets::*;
 pub use unix_sockets::*;
 
 use std::fs::File;
-use std::os::fd::{FromRawFd, OwnedFd};
+use std::os::fd::FromRawFd;
 use std::{os::unix::io::AsRawFd, os::unix::io::RawFd};
 
 use crate::fd_store::FDStore;

@@ -40,6 +40,7 @@ pub mod cgroups;
     target_os = "openbsd",
     target_os = "netbsd",
     target_os = "dragonfly",
-    target_os = "linux"
+    target_os = "linux",
+    target_os = "redox",
 ))]
 pub use unix_common::*;
