@@ -1,4 +1,4 @@
-use std::{os::unix::io::AsRawFd, os::unix::io::FromRawFd, os::unix::io::RawFd};
+use std::{os::unix::io::AsRawFd, os::unix::io::RawFd};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct FifoConfig {
@@ -22,7 +22,7 @@ impl FifoConfig {
         let fifo_fd = nix::fcntl::open(&self.path, open_flags, mode)
             .map_err(|e| format!("Error opening fifo file {:?}: {}", self.path, e))?;
         // need to make a file out of that so AsRawFd is implemented (it's not implmeneted for RawFd itself...)
-        let fifo = unsafe { std::fs::File::from_raw_fd(fifo_fd) };
+        let fifo = unsafe { std::fs::File::from(fifo_fd) };
         Ok(Box::new(fifo))
     }
 

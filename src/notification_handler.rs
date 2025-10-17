@@ -10,7 +10,9 @@ use crate::runtime_info::*;
 use crate::services::Service;
 use crate::services::StdIo;
 use crate::units::*;
+use std::fs::File;
 use std::os::fd::BorrowedFd;
+use std::os::fd::FromRawFd;
 use std::{collections::HashMap, os::unix::io::AsRawFd};
 
 fn collect_from_srvc<F>(run_info: ArcMutRuntimeInfo, f: F) -> HashMap<i32, UnitId>
@@ -63,9 +65,10 @@ pub fn handle_all_streams(run_info: ArcMutRuntimeInfo) {
                         if let Some(srvc_unit) = unit_table.get(id) {
                             if let Specific::Service(srvc) = &srvc_unit.specific {
                                 let mut_state = &mut *srvc.state.write().unwrap();
+                                let fd_file = unsafe { File::from_raw_fd(*fd) };
                                 if let Some(socket) = &mut_state.srvc.notifications {
                                     let old_flags =
-                                        nix::fcntl::fcntl(*fd, nix::fcntl::FcntlArg::F_GETFL)
+                                        nix::fcntl::fcntl(&fd_file, nix::fcntl::FcntlArg::F_GETFL)
                                             .unwrap();
 
                                     let old_flags =
@@ -73,7 +76,7 @@ pub fn handle_all_streams(run_info: ArcMutRuntimeInfo) {
                                     let mut new_flags = old_flags.clone();
                                     new_flags.insert(nix::fcntl::OFlag::O_NONBLOCK);
                                     nix::fcntl::fcntl(
-                                        *fd,
+                                        &fd_file,
                                         nix::fcntl::FcntlArg::F_SETFL(new_flags),
                                     )
                                     .unwrap();
@@ -87,7 +90,7 @@ pub fn handle_all_streams(run_info: ArcMutRuntimeInfo) {
                                         }
                                     };
                                     nix::fcntl::fcntl(
-                                        *fd,
+                                        &fd_file,
                                         nix::fcntl::FcntlArg::F_SETFL(old_flags),
                                     )
                                     .unwrap();
@@ -146,25 +149,33 @@ pub fn handle_all_std_out(run_info: ArcMutRuntimeInfo) {
                             if let Specific::Service(srvc) = &srvc_unit.specific {
                                 let mut_state = &mut *srvc.state.write().unwrap();
                                 let status = srvc_unit.common.status.read().unwrap();
+                                let fd_file = unsafe { File::from_raw_fd(*fd) };
 
                                 let old_flags =
-                                    nix::fcntl::fcntl(*fd, nix::fcntl::FcntlArg::F_GETFL).unwrap();
+                                    nix::fcntl::fcntl(&fd_file, nix::fcntl::FcntlArg::F_GETFL)
+                                        .unwrap();
                                 let old_flags = nix::fcntl::OFlag::from_bits(old_flags).unwrap();
                                 let mut new_flags = old_flags.clone();
                                 new_flags.insert(nix::fcntl::OFlag::O_NONBLOCK);
-                                nix::fcntl::fcntl(*fd, nix::fcntl::FcntlArg::F_SETFL(new_flags))
-                                    .unwrap();
+                                nix::fcntl::fcntl(
+                                    &fd_file,
+                                    nix::fcntl::FcntlArg::F_SETFL(new_flags),
+                                )
+                                .unwrap();
 
                                 ////
-                                let bytes = match nix::unistd::read(*fd, &mut buf[..]) {
+                                let bytes = match nix::unistd::read(&fd_file, &mut buf[..]) {
                                     Ok(b) => b,
                                     Err(nix::Error::EWOULDBLOCK) => 0,
                                     Err(e) => panic!("{}", e),
                                 };
                                 ////
 
-                                nix::fcntl::fcntl(*fd, nix::fcntl::FcntlArg::F_SETFL(old_flags))
-                                    .unwrap();
+                                nix::fcntl::fcntl(
+                                    &fd_file,
+                                    nix::fcntl::FcntlArg::F_SETFL(old_flags),
+                                )
+                                .unwrap();
 
                                 mut_state.srvc.stdout_buffer.extend(&buf[..bytes]);
                                 mut_state.srvc.log_stdout_lines(&name, &status).unwrap();
@@ -215,24 +226,31 @@ pub fn handle_all_std_err(run_info: ArcMutRuntimeInfo) {
                             if let Specific::Service(srvc) = &srvc_unit.specific {
                                 let mut_state = &mut *srvc.state.write().unwrap();
                                 let status = srvc_unit.common.status.read().unwrap();
-
+                                let fd_file = unsafe { File::from_raw_fd(*fd) };
                                 let old_flags =
-                                    nix::fcntl::fcntl(*fd, nix::fcntl::FcntlArg::F_GETFL).unwrap();
+                                    nix::fcntl::fcntl(&fd_file, nix::fcntl::FcntlArg::F_GETFL)
+                                        .unwrap();
                                 let old_flags = nix::fcntl::OFlag::from_bits(old_flags).unwrap();
                                 let mut new_flags = old_flags.clone();
                                 new_flags.insert(nix::fcntl::OFlag::O_NONBLOCK);
-                                nix::fcntl::fcntl(*fd, nix::fcntl::FcntlArg::F_SETFL(new_flags))
-                                    .unwrap();
+                                nix::fcntl::fcntl(
+                                    &fd_file,
+                                    nix::fcntl::FcntlArg::F_SETFL(new_flags),
+                                )
+                                .unwrap();
 
                                 ////
-                                let bytes = match nix::unistd::read(*fd, &mut buf[..]) {
+                                let bytes = match nix::unistd::read(&fd_file, &mut buf[..]) {
                                     Ok(b) => b,
                                     Err(nix::Error::EWOULDBLOCK) => 0,
                                     Err(e) => panic!("{}", e),
                                 };
                                 ////
-                                nix::fcntl::fcntl(*fd, nix::fcntl::FcntlArg::F_SETFL(old_flags))
-                                    .unwrap();
+                                nix::fcntl::fcntl(
+                                    &fd_file,
+                                    nix::fcntl::FcntlArg::F_SETFL(old_flags),
+                                )
+                                .unwrap();
 
                                 mut_state.srvc.stderr_buffer.extend(&buf[..bytes]);
                                 mut_state.srvc.log_stderr_lines(&name, &status).unwrap();

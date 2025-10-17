@@ -5,6 +5,7 @@ use super::start_service::*;
 use crate::runtime_info::*;
 use crate::units::*;
 
+use std::fs::File;
 use std::io::Write;
 use std::os::unix::io::AsRawFd;
 use std::os::unix::io::RawFd;
@@ -353,16 +354,16 @@ impl Service {
         use std::os::unix::io::FromRawFd;
         let stdout = if let Some(stdio) = &self.stdout {
             unsafe {
-                let duped = nix::unistd::dup(stdio.write_fd()).unwrap();
-                Stdio::from(std::fs::File::from_raw_fd(duped))
+                let duped = nix::unistd::dup(File::from_raw_fd(stdio.write_fd())).unwrap();
+                Stdio::from(duped)
             }
         } else {
             Stdio::piped()
         };
         let stderr = if let Some(stdio) = &self.stderr {
             unsafe {
-                let duped = nix::unistd::dup(stdio.write_fd()).unwrap();
-                Stdio::from(std::fs::File::from_raw_fd(duped))
+                let duped = nix::unistd::dup(File::from_raw_fd(stdio.write_fd())).unwrap();
+                Stdio::from(duped)
             }
         } else {
             Stdio::piped()

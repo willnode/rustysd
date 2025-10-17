@@ -8,6 +8,8 @@ use log::trace;
 pub use network_sockets::*;
 pub use unix_sockets::*;
 
+use std::fs::File;
+use std::os::fd::{FromRawFd, OwnedFd};
 use std::{os::unix::io::AsRawFd, os::unix::io::RawFd};
 
 use crate::fd_store::FDStore;
@@ -90,7 +92,7 @@ impl Socket {
             // the ńeeded fd's will be duped which unsets the flag again
             let new_fd = as_raw_fd.as_raw_fd();
             nix::fcntl::fcntl(
-                new_fd,
+                unsafe { File::from_raw_fd(new_fd) },
                 nix::fcntl::FcntlArg::F_SETFD(nix::fcntl::FdFlag::FD_CLOEXEC),
             )
             .unwrap();

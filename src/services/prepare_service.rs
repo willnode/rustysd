@@ -2,6 +2,8 @@ use super::StdIo;
 use crate::services::Service;
 use crate::units::ServiceConfig;
 use crate::units::StdIoOption;
+use std::fs::File;
+use std::os::fd::FromRawFd;
 use std::os::fd::IntoRawFd;
 use std::os::unix::io::AsRawFd;
 use std::os::unix::net::UnixDatagram;
@@ -61,7 +63,7 @@ pub fn prepare_service(
         // close these fd's on exec. They must not show up in child processes
         let new_listener_fd = stream.as_raw_fd();
         nix::fcntl::fcntl(
-            new_listener_fd,
+            unsafe { File::from_raw_fd(new_listener_fd) },
             nix::fcntl::FcntlArg::F_SETFD(nix::fcntl::FdFlag::FD_CLOEXEC),
         )
         .unwrap();
