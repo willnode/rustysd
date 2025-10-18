@@ -59,6 +59,7 @@ fn main() {
         let mut stream = std::os::unix::net::UnixStream::connect(&addr).unwrap();
         println!("Write cmd: {}", str_call);
         stream.write_all(str_call.as_bytes()).unwrap();
+        #[cfg(not(target_os = "redox"))]
         stream.shutdown(std::net::Shutdown::Write).unwrap();
         println!("Wait for response");
         let resp: Value = serde_json::from_reader(&mut stream).unwrap();
@@ -68,6 +69,7 @@ fn main() {
         let mut stream = std::net::TcpStream::connect(addr).unwrap();
         println!("Write cmd: {}", str_call);
         stream.write_all(str_call.as_bytes()).unwrap();
+        #[cfg(not(target_os = "redox"))]
         stream.shutdown(std::net::Shutdown::Write).unwrap();
         println!("Wait for response");
         let resp: Value = serde_json::from_reader(&mut stream).unwrap();
