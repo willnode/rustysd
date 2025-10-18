@@ -57,6 +57,7 @@ pub fn wait_for_service(
                     }
                 }
 
+                #[cfg(not(target_os = "redox"))]
                 if let Some(duration_timeout) = duration_timeout {
                     let duration_elapsed = start_time.elapsed();
                     if duration_elapsed > duration_timeout {
@@ -91,6 +92,7 @@ pub fn wait_for_service(
                     trace!("[FORK_PARENT] Service {} still not ready", name);
                 }
             }
+            #[cfg(not(target_os = "redox"))]
             if let Some(stream) = &srvc.notifications {
                 stream.set_read_timeout(None).unwrap();
             }
