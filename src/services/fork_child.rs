@@ -7,7 +7,7 @@ use std::os::unix::io::RawFd;
 pub fn after_fork_child(
     selfpath: &std::ffi::CStr,
     self_args: &[*const libc::c_char],
-    socket_fds: &mut [RawFd],
+    _socket_fds: &mut [RawFd],
     new_stdout: RawFd,
     new_stderr: RawFd,
     exec_helper_config: RawFd,
@@ -23,14 +23,14 @@ pub fn after_fork_child(
     // Setup the new stdio so println! and eprintln! go to the expected fds
     dup_stdio(new_stdout, new_stderr, exec_helper_config);
 
-    // Now we may at least write to stderr
-    write_to_stderr("Prepare fork child before execing!");
+    // // Now we may at least write to stderr
+    // write_to_stderr("Prepare fork child before execing!");
 
-    // Lets move into a new process group before execing
-    move_into_new_process_group();
+    // // Lets move into a new process group before execing
+    // move_into_new_process_group();
 
-    // Dup all the fds for the service here, because we use SO_CLOEXEC on all fds so doing it after exec isn't possible
-    dup_fds(socket_fds);
+    // // Dup all the fds for the service here, because we use SO_CLOEXEC on all fds so doing it after exec isn't possible
+    // dup_fds(socket_fds);
 
     // Just so we have a clearer picture on what is happening while debugging
     write_to_stderr("Exec the exec helper");
@@ -79,8 +79,8 @@ fn dup_stdio(new_stdout: RawFd, new_stderr: RawFd, exec_helper_config: RawFd) {
     }
 
     // First dup stderr so we can potentially log other dup errors
-    dup_one_stdio(new_stderr, libc::STDERR_FILENO, "stderr", false);
-    dup_one_stdio(new_stdout, libc::STDOUT_FILENO, "stdout", true);
+    // dup_one_stdio(new_stderr, libc::STDERR_FILENO, "stderr", false);
+    // dup_one_stdio(new_stdout, libc::STDOUT_FILENO, "stdout", true);
     dup_one_stdio(exec_helper_config, libc::STDIN_FILENO, "stdin", true);
 }
 

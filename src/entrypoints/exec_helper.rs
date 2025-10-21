@@ -25,7 +25,8 @@ fn prepare_exec_args(
     let cmd = std::ffi::CString::new(cmd_str.to_string_lossy().as_bytes()).unwrap();
 
     let exec_name = std::path::PathBuf::from(cmd_str);
-    let exec_name = exec_name.file_name().unwrap();
+    // SSHD issue if we just have file name here
+    // let exec_name = exec_name.file_name().unwrap();
     let exec_name: Vec<u8> = exec_name.to_str().unwrap().bytes().collect();
     let exec_name = std::ffi::CString::new(exec_name).unwrap();
 
