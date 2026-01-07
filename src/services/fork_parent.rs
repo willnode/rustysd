@@ -30,8 +30,6 @@ pub fn wait_for_service(
                 name
             );
 
-            // Redox OS is not handling timeout properly
-            #[cfg(not(target_os = "redox"))]
             let duration_timeout = Some(std::time::Duration::from_nanos(1_000_000_000_000));
             let mut buf = [0u8; 512];
             loop {
@@ -86,7 +84,6 @@ pub fn wait_for_service(
                 srvc.notifications_buffer
                     .push_str(&String::from_utf8(buf[..bytes].to_vec()).unwrap());
                 crate::notification_handler::handle_notifications_from_buffer(srvc, &name);
-                #[cfg(not(target_os = "redox"))]
                 if srvc.signaled_ready {
                     srvc.signaled_ready = false;
                     trace!("[FORK_PARENT] Service {} sent READY=1 notification", name);
@@ -94,10 +91,8 @@ pub fn wait_for_service(
                 } else {
                     trace!("[FORK_PARENT] Service {} still not ready", name);
                 }
-                #[cfg(target_os = "redox")]
                 break;
             }
-            #[cfg(not(target_os = "redox"))]
             if let Some(stream) = &srvc.notifications {
                 stream.set_read_timeout(None).unwrap();
             }

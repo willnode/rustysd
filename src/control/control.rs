@@ -20,7 +20,9 @@ pub fn open_all_sockets(run_info: ArcMutRuntimeInfo, conf: &crate::config::Confi
     use std::os::unix::net::UnixListener;
     std::fs::create_dir_all(&conf.notification_sockets_dir).unwrap();
     let unixsock = UnixListener::bind(&control_sock_path).unwrap();
-    accept_control_connections_unix_socket(run_info.clone(), unixsock);
+    // Redox doesn't cope this
+    // accept_control_connections_unix_socket(run_info.clone(), unixsock);
+
     //let tcpsock = std::net::TcpListener::bind("127.0.0.1:8080").unwrap();
     //accept_control_connections_tcp(
     //    run_info.clone(),
