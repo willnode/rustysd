@@ -271,43 +271,38 @@ fn activate_units_recursive(
         let tpool_copy = tpool.clone();
         let errors_copy = errors.clone();
         let filter_ids_copy = filter_ids.clone();
-        tpool.execute(move || {
-            match activate_unit(
-                id,
-                &*run_info_copy.read().unwrap(),
-                ActivationSource::Regular,
-            ) {
-                Ok(StartResult::Started(next_services_ids)) => {
-                    // make copies to move into the closure
-                    let run_info_copy2 = run_info_copy.clone();
-                    let tpool_copy2 = tpool_copy.clone();
-                    let errors_copy2 = errors_copy.clone();
-                    let filter_ids_copy2 = filter_ids_copy.clone();
+        match activate_unit(
+            id,
+            &*run_info_copy.read().unwrap(),
+            ActivationSource::Regular,
+        ) {
+            Ok(StartResult::Started(next_services_ids)) => {
+                // make copies to move into the closure
+                let run_info_copy2 = run_info_copy.clone();
+                let tpool_copy2 = tpool_copy.clone();
+                let errors_copy2 = errors_copy.clone();
+                let filter_ids_copy2 = filter_ids_copy.clone();
 
-                    let next_services_job = move || {
-                        activate_units_recursive(
-                            next_services_ids,
-                            filter_ids_copy2,
-                            run_info_copy2,
-                            tpool_copy2,
-                            errors_copy2,
-                        );
-                    };
-                    tpool_copy.execute(next_services_job);
-                }
-                Err(e) => {
-                    if let UnitOperationErrorReason::DependencyError(_) = e.reason {
-                        // Thats ok. The unit is waiting for more dependencies and will be
-                        // activated again when another dependency has finished starting
+                activate_units_recursive(
+                    next_services_ids,
+                    filter_ids_copy2,
+                    run_info_copy2,
+                    tpool_copy2,
+                    errors_copy2,
+                );
+            }
+            Err(e) => {
+                if let UnitOperationErrorReason::DependencyError(_) = e.reason {
+                    // Thats ok. The unit is waiting for more dependencies and will be
+                    // activated again when another dependency has finished starting
 
-                        // This should not happen though, since we filter the units beforehand
-                        // to only get the startables
-                    } else {
-                        error!("Error while activating unit {}", e);
-                        errors_copy.lock().unwrap().push(e);
-                    }
+                    // This should not happen though, since we filter the units beforehand
+                    // to only get the startables
+                } else {
+                    error!("Error while activating unit {}", e);
+                    errors_copy.lock().unwrap().push(e);
                 }
             }
-        });
+        };
     }
 }
